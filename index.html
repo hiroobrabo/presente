@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-sclae=1" />
+  <title>Eu te amo — diário</title>
+  <meta name="description" content="Uma declaração diária de amor em diferentes línguas." />
+  <meta property="og:title" content="Eu te amo — diário" />
+  <meta property="og:description" content="Todo dia, a mesma certeza em uma língua diferente." />
+  <meta name="theme-color" content="#ff3b7b" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg: #0f0f14;
+      --card: #161620;
+      --muted: #a9a9b3;
+      --text: #f7f7fb;
+      --accent: #ff3b7b;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+      color:var(--text);
+      background: radial-gradient(1200px 1200px at 110% -10%, rgba(255,59,123,.16), transparent 60%),
+                  radial-gradient(1000px 1000px at -10% 110%, rgba(120,88,255,.18), transparent 55%),
+                  var(--bg);
+      display:flex;align-items:center;justify-content:center;
+      padding: 32px;
+    }
+    .card{
+      width:min(720px, 92vw);
+      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      backdrop-filter: blur(8px);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius: 24px;
+      padding:28px clamp(20px, 4vw, 44px);
+      box-shadow: 0 20px 60px rgba(0,0,0,.35);
+      position:relative;
+      overflow:hidden;
+    }
+    .ring{position:absolute;inset:-40%;background:conic-gradient(from 0deg, rgba(255,59,123,.2), rgba(120,88,255,.2), rgba(255,59,123,.2)); filter: blur(90px); opacity:.25;}
+    header{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+    .pill{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:6px 12px;color:var(--muted);font-size:12px;letter-spacing:.4px;text-transform:uppercase}
+    .heart{width:14px;height:14px;display:inline-block;background:var(--accent);clip-path:path('M8.023 13.64C-4.25 6.2 3.1-3.66 8.023 1.9 12.945-3.66 20.296 6.2 8.023 13.64Z')}
+
+    h1{font-size: clamp(28px, 5vw, 44px);line-height:1.1;margin:8px 0 8px;font-weight:800}
+    .date{color:var(--muted);font-size:14px;margin-bottom:14px}
+
+    .phrase{font-size: clamp(28px, 7vw, 56px);line-height:1.1;font-weight:800;letter-spacing:.2px;margin: 18px 0 10px;text-wrap:balance}
+    .lang{color:var(--muted);font-size:16px;margin-bottom:22px}
+
+    .footer{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;color:var(--muted);font-size:12px;margin-top:16px}
+    .btns{display:flex;gap:8px}
+    button{
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.12);
+      color:var(--text);
+      border-radius:14px; padding:10px 14px; font-weight:600; cursor:pointer;
+      transition: transform .06s ease, background .2s ease; backdrop-filter: blur(6px);
+    }
+    button:hover{background:rgba(255,255,255,.12)}
+    button:active{transform: translateY(1px)}
+
+    .hearts{position:absolute;inset:0;pointer-events:none;}
+    .hearts span{position:absolute; font-size: 14px; opacity:0; animation: float 6s linear infinite;}
+    @keyframes float{
+      0%{transform: translateY(12px) scale(.8); opacity:0}
+      10%{opacity:.6}
+      60%{opacity:.6}
+      100%{transform: translateY(-130%) scale(1.2); opacity:0}
+    }
+    .sig{font-style:italic}
+    .small{font-size:11px}
+    .hint{display:block; font-size:12px; color:var(--muted); margin-top:2px}
+    .note{font-size:12px; color:var(--muted); margin-top:10px}
+    .divider{height:1px; background:linear-gradient(90deg, transparent, rgba(255,255,255,.12), transparent); margin: 10px 0}
+  </style>
+</head>
+<body>
+  <div class="card" role="main" aria-live="polite">
+    <div class="ring" aria-hidden="true"></div>
+    <header>
+      <span class="pill"><i class="heart"></i> Mensagem do dia</span>
+    </header>
+    <h1 id="title">Eu so respiro pela esperança de falar com voce mais um dia da minha vida</h1>
+    <div class="date" id="today"></div>
+    <div class="phrase" id="phrase"></div>
+    <div class="lang" id="lang"></div>
+    <div class="divider"></div>
+    <div class="footer">
+      <div class="btns">
+        <button id="copy">Copiar frase</button>
+        <button id="tts">Ouvir</button>
+        <button id="share">Compartilhar</button>
+      </div>
+      <div>
+        <span class="small">Feito com ❤</span>
+      </div>
+    </div>
+    <div class="hearts" id="hearts" aria-hidden="true"></div>
+  </div>
+
+<script>
+// =========================
+//  Configuração das frases
+// =========================
+// Cada item tem: texto, nome da língua e (opcional) código de voz BCP‑47 para TTS
+const MESSAGES = [
+  {t:"Eu te amo", l:"Português (Brasil)", v:"pt-BR"},
+  {t:"I love you", l:"Inglês", v:"en-US"},
+  {t:"Te quiero", l:"Espanhol", v:"es-ES"},
+  {t:"Je t’aime", l:"Francês", v:"fr-FR"},
+  {t:"Ti amo", l:"Italiano", v:"it-IT"},
+  {t:"Ich liebe dich", l:"Alemão", v:"de-DE"},
+  {t:"Eu te amo", l:"Português (Portugal)", v:"pt-PT"},
+  {t:"Te iubesc", l:"Romeno", v:"ro-RO"},
+  {t:"S’agapo", l:"Grego (Σ’ αγαπώ)", v:"el-GR"},
+  {t:"Te amo", l:"Latim", v:"la"},
+  {t:"Aš tave myliu", l:"Lituano", v:"lt-LT"},
+  {t:"Tebya lyublyu (Я тебя люблю)", l:"Russo", v:"ru-RU"},
+  {t:"Ya tebya kokhayu (Я тебе кохаю)", l:"Ucraniano", v:"uk-UA"},
+  {t:"Kocham cię", l:"Polonês", v:"pl-PL"},
+  {t:"Miluji tě", l:"Tcheco", v:"cs-CZ"},
+  {t:"Ľúbim ťa", l:"Eslovaco", v:"sk-SK"},
+  {t:"Szeretlek", l:"Húngaro", v:"hu-HU"},
+  {t:"Kocham cię", l:"Silesiano"},
+  {t:"Te volim", l:"Sérvio/Croata/Bósnio", v:"sr-RS"},
+  {t:"Ljubim te", l:"Esloveno", v:"sl-SI"},
+  {t:"Jeg elsker dig", l:"Dinamarquês", v:"da-DK"},
+  {t:"Jag älskar dig", l:"Sueco", v:"sv-SE"},
+  {t:"Jeg elsker deg", l:"Norueguês", v:"nb-NO"},
+  {t:"Ég elska þig", l:"Islandês"},
+  {t:"Rakastan sinua", l:"Finlandês", v:"fi-FI"},
+  {t:"Tá grá agam duit", l:"Irlandês", v:"ga-IE"},
+  {t:"Amo-te", l:"Galego", v:"gl-ES"},
+  {t:"T’estimo", l:"Catalão", v:"ca-ES"},
+  {t:"Volim te", l:"Montenegrino"},
+  {t:"Ti vogghiu beni", l:"Siciliano"},
+  {t:"Ani ohev otach / Ani ohevet otcha (אני אוהב/ת אותך)", l:"Hebraico", v:"he-IL"},
+  {t:"Aḥebbik (أحبك)", l:"Árabe", v:"ar-SA"},
+  {t:"Man to rā dust dāram (من تو را دوست دارم)", l:"Persa/Farsi", v:"fa-IR"},
+  {t:"Tora bhalobashi (তোমায় ভালোবাসি)", l:"Bengali", v:"bn-BD"},
+  {t:"Main tumse pyar karta/karti hoon (मैं तुमसे प्यार करता/करती हूँ)", l:"Hindi", v:"hi-IN"},
+  {t:"Maiṁ tuhānū piār karadā/karadī hāṁ (ਮੈਂ ਤੁਹਾਨੂੰ ਪਿਆਰ ਕਰਦਾ/ਕਰਦੀ ਹਾਂ)", l:"Punjabi", v:"pa-IN"},
+  {t:"Mujhe tumse pyaar hai (مجھے تم سے پیار ہے)", l:"Urdu", v:"ur-PK"},
+  {t:"Nān unnai kātalikkiṟēn (நான் உன்னை காதலிக்கிறேன்)", l:"Tâmil", v:"ta-IN"},
+  {t:"Nēnu ninnu prēmistunnānu (నేను నిన్ను ప్రేమిస్తున్నాను)", l:"Telugu", v:"te-IN"},
+  {t:"Nanu ninna prītisuttēne (ನಾನು ನಿನ್ನ ಪ್ರೀತಿಸುತ್ತೇನೆ)", l:"Canarês", v:"kn-IN"},
+  {t:"Ñān ninne snēhikkunnu (ഞാൻ നിന്നെ സ്നേഹിക്കുന്നു)", l:"Malaiala", v:"ml-IN"},
+  {t:"Nenu obata adareyi (මම ඔයාට ආදරෙයි)", l:"Cingalês", v:"si-LK"},
+  {t:"Ma timīlā’ī māyā garchu (म तिमीलाई माया गर्छु)", l:"Nepalês", v:"ne-NP"},
+  {t:"Phom rak khun / Chan rak khun (ฉันรักคุณ)", l:"Tailandês", v:"th-TH"},
+  {t:"Khnhom sralanh anak (ខ្ញុំ​ស្រលាញ់​អ្នក)", l:"Khmer", v:"km-KH"},
+  {t:"Khony hak chao (ຂ້ອຍຮັກເຈົ້າ)", l:"Lao"},
+  {t:"Anh yêu em / Em yêu anh", l:"Vietnamita", v:"vi-VN"},
+  {t:"Aku cinta kamu", l:"Indonésio", v:"id-ID"},
+  {t:"Saya cinta padamu", l:"Malaio", v:"ms-MY"},
+  {t:"Mahal kita", l:"Filipino/Tagalog", v:"fil-PH"},
+  {t:"Wǒ ài nǐ (我爱你)", l:"Chinês (Mandarim)", v:"zh-CN"},
+  {t:"Ngóh oi néih (我愛你)", l:"Cantonês", v:"yue-HK"},
+  {t:"Wǒ ài nǐ (我愛你)", l:"Chinês Tradicional", v:"zh-TW"},
+  {t:"Aishiteru (愛してる)", l:"Japonês", v:"ja-JP"},
+  {t:"Saranghae (사랑해)", l:"Coreano", v:"ko-KR"},
+  {t:"Bi chamdlay (Би чамд хайртай)", l:"Mongol"},
+  {t:"Mekir tkviz (მიყვარხარ)", l:"Georgiano"},
+  {t:"Yes kez sirum em (Ես քեզ սիրում եմ)", l:"Armênio"},
+  {t:"Mən səni sevirəm", l:"Azeri", v:"az-AZ"},
+  {t:"Men seni sevaman", l:"Uzbeque"},
+  {t:"Men seni jaqsı köremin", l:"Cazaque"},
+  {t:"Men seni süyemin", l:"Quirguiz"},
+  {t:"Men seni söýýärin", l:"Turcomeno"},
+  {t:"Seni seviyorum", l:"Turco", v:"tr-TR"},
+  {t:"Tora ohaera", l:"Bambara"},
+  {t:"Nakupenda", l:"Suaíli/Swahili", v:"sw-KE"},
+  {t:"Ngiyakuthanda", l:"Zulu"},
+  {t:"Ndiyakuthanda", l:"Xhosa"},
+  {t:"Mo nifẹ rẹ", l:"Iorubá"},
+  {t:"Ina son ka/ki", l:"Hauçá/Hausa"},
+  {t:"A hụrụ m gị n'anya", l:"Igbo"},
+  {t:"Ek is lief vir jou", l:"Africâner/Afrikaans", v:"af-ZA"},
+  {t:"Waan ku jeclahay", l:"Somali"},
+  {t:"Tiako ianao", l:"Malgaxe"},
+  {t:"Aloha wau ia ‘oe", l:"Havaiano"},
+  {t:"Aroha au ki a koe", l:"Maori"},
+  {t:"Ou te alofa ia te oe", l:"Samoano"},
+  {t:"Au domoni iko", l:"Fijiano"},
+  {t:"Te amo", l:"Esperanto"},
+  {t:"Mi amas vin", l:"Esperanto (clássico)"},
+  {t:"Volim te", l:"Bósnio"},
+  {t:"Te iubesc", l:"Moldavo"},
+  {t:"Nga yaw pya de", l:"Birmanês"},
+  {t:"Aloha wau ia 'oe", l:"Havaiano"},
+  {t:"Te ho'oipoipoi nei au ia 'oe", l:"Taitiano"},
+  {t:"Ninakupenda", l:"Suaíli"},
+  {t:"Ndimakukonda", l:"Chichewa"},
+  {t:"Ndakhana", l:"Chiluba"},
+  {t:"Ke rata wena", l:"Sesotho"},
+  {t:"Ndiya kukuthanda", l:"Xhosa"},
+  {t:"Ndinokuda", l:"Shona"},
+  {t:"Ndinogana", l:"Tsonga"},
+  {t:"Ke a go rata", l:"Tswana"},
+  {t:"Mi taa ga", l:"Dagbani"},
+  {t:"Ina son ka/ki", l:"Hauçá"},
+  {t:"A hụrụ m gị n'anya", l:"Igbo"},
+  {t:"Mo nifẹ rẹ", l:"Iorubá"},
+  {t:"Nakupenda sana", l:"Kiswahili"},
+  {t:"Ngiya'kuthanda", l:"Zulu"},
+  {t:"Ek is lief vir jou", l:"Africâner"},
+  {t:"Waan ku jeclahay", l:"Somali"},
+  {t:"N'djimana", l:"Mandinga"},
+  {t:"Ndiarignama", l:"Soninke"},
+  {t:"Tiako ianao", l:"Malgaxe"},
+  {t:"Aroha au ki a koe", l:"Maori"},
+  {t:"Ou te alofa ia te oe", l:"Samoano"},
+  {t:"Te u'i nei au", l:"Taitiano"},
+  {t:"Au domoni iko", l:"Fijiano"},
+  {t:"Nga yaw pya de", l:"Birmanês"},
+  {t:"Khñom srolañ nak", l:"Khmer"},
+  {t:"Khony hak chao", l:"Lao"},
+  {t:"Anh yêu em / Em yêu anh", l:"Vietnamita"},
+  {t:"Aku cinta kamu", l:"Indonésio"},
+  {t:"Saya cinta padamu", l:"Malaio"},
+  {t:"Mahal kita", l:"Filipino/Tagalog"},
+  {t:"Wǒ ài nǐ (我爱你)", l:"Chinês (Mandarim)"},
+  {t:"Ngóh oi néih (我愛你)", l:"Cantonês"},
+  {t:"Aishiteru (愛してる)", l:"Japonês"},
+  {t:"Saranghae (사랑해)", l:"Coreano"},
+  {t:"Bi chamd khairtai (Би чамд хайртай)", l:"Mongol"},
+  {t:"Men seni süyemin", l:"Cazaque"},
+  {t:"Men seni sevaman", l:"Uzbeque"},
+  {t:"Mən səni sevirəm", l:"Azeri"},
+  {t:"Seni seviyorum", l:"Turco"},
+  {t:"Mi amas vin", l:"Esperanto"},
+  {t:"Te quiero", l:"Ladino"},
+  {t:"Ta gra agam ort", l:"Gaélico Escocês"},
+  {t:"M'gann a'd", l:"Irlandês"},
+  {t:"Yr wyf i'n dy garu di", l:"Galês"},
+  {t:"Me 'gar 'ta", l:"Bretão"},
+  {t:"Mocham", l:"Córnico"},
+  {t:"Tha gaol agam ort", l:"Gaélico"},
+  {t:"Ti-amo", l:"Trentino"},
+  {t:"Te vegghiu beni", l:"Siciliano"},
+  {t:"Ti voglio bene", l:"Italiano"},
+  {t:"Je t'aime", l:"Francês"},
+  {t:"Amo-te", l:"Galego"},
+  {t:"T'estimo", l:"Catalão"},
+  {t:"Te quiero", l:"Espanhol"},
+  {t:"Te amo", l:"Português"},
+  {t:"Aš tave myliu", l:"Lituano"},
+  {t:"Es tevi mīlu", l:"Letão"},
+  {t:"Armastan sind", l:"Estoniano"},
+  {t:"Rakastan sinua", l:"Finlandês"},
+  {t:"Ma armastan sind", l:"Võro"},
+  {t:"Sievietes, es tevi mīlu", l:"Líbio"},
+  {t:"Jeg elsker deg", l:"Norueguês"},
+  {t:"Jeg elsker dig", l:"Dinamarquês"},
+  {t:"Jag älskar dig", l:"Sueco"},
+  {t:"Eg elski teg", l:"Faroês"},
+  {t:"Ég elska þig", l:"Islandês"},
+  {t:"S’agapo", l:"Grego"},
+  {t:"Ti amo", l:"Albanês"},
+  {t:"Te dua", l:"Albanês (Kosovo)"},
+  {t:"Ngrerete", l:"Romeno"},
+  {t:"Volim te", l:"Sérvio"},
+  {t:"Ljubim te", l:"Esloveno"},
+  {t:"Miloš te", l:"Tcheco"},
+  {t:"Ľúbim ťa", l:"Eslovaco"},
+  {t:"Kocham cię", l:"Polonês"},
+  {t:"Szeretlek", l:"Húngaro"},
+  {t:"Ya tebya lyublyu (Я тебя люблю)", l:"Russo"},
+  {t:"Ya tebe kokhayu (Я тебе кохаю)", l:"Ucraniano"},
+  {t:"Te iubesc", l:"Romeno"},
+  {t:"Təbər-təbərəm", l:"Samoano"},
+  {t:"Ech hunn dech gär", l:"Luxemburguês"},
+  {t:"Ik hou van je", l:"Holandês"},
+  {t:"Ik hou van u", l:"Flamengo"},
+  {t:"J't'aime", l:"Francês"},
+  {t:"Ich liebe dich", l:"Alemão"},
+  {t:"Seni seviyorum", l:"Turco"},
+  {t:"Man to ra dust dāram", l:"Persa"},
+  {t:"Amo te", l:"Latim"},
+  {t:"Te amo", l:"Latim (vulgar)"},
+  {t:"Ego te amo", l:"Latim (clássico)"},
+  {t:"Ana Uhibbuka/Uhibbuki", l:"Árabe"},
+  {t:"Kullu nafsin dha'iqatul mawt", l:"Árabe (dialeto) - 'Toda alma provará a morte'"},
+  {t:"Seni seviyorum", l:"Turcomeno"},
+  {t:"Men seni süyemin", l:"Quirguiz"},
+  {t:"Men seni sevaman", l:"Uzbeque"},
+  {t:"Mən səni sevirəm", l:"Azeri"},
+  {t:"Nagu mahallam", l:"Suaíli"},
+  {t:"Na'u mahallam", l:"Malgaxe"},
+  {t:"Je t'aime", l:"Francês (quebequense)"},
+  {t:"Mina te armastan sind", l:"Lituano"},
+  {t:"Ja volim te", l:"Esloveno"},
+  {t:"Aš tave myliu", l:"Lituano"},
+  {t:"Ya tebya lyublyu", l:"Russo"},
+  {t:"Saranghae", l:"Coreano"},
+  {t:"Aishiteru", l:"Japonês"},
+  {t:"Wǒ ài nǐ", l:"Chinês (Mandarim)"},
+  {t:"Main tumse pyar karta/karti hoon", l:"Hindi"},
+  {t:"Ninakupenda", l:"Suaíli"},
+  {t:"Ndiyakuthanda", l:"Xhosa"},
+  {t:"Ngiya'kuthanda", l:"Zulu"},
+  {t:"Mo nifẹ rẹ", l:"Iorubá"},
+  {t:"A hụrụ m gị n'anya", l:"Igbo"},
+  {t:"Ina son ka/ki", l:"Hauçá"},
+  {t:"Ana Uhibbuka/Uhibbuki", l:"Árabe"},
+  {t:"Seni seviyorum", l:"Turco"},
+  {t:"Ech hunn dech gär", l:"Luxemburguês"},
+  {t:"Ek is lief vir jou", l:"Africâner"},
+  {t:"Te dua", l:"Albanês"},
+  {t:"Szeretlek", l:"Húngaro"},
+  {t:"Nanu ninna prītisuttēne", l:"Canarês"},
+  {t:"Nēnu ninnu prēmistunnānu", l:"Telugu"},
+  {t:"Nān unnai kātalikkiṟēn", l:"Tâmil"},
+  {t:"Ñān ninne snēhikkunnu", l:"Malaiala"},
+  {t:"Tora bhalobashi", l:"Bengali"},
+  {t:"Main tuhānuṁ pi'āra karadā/karadī hāṁ", l:"Punjabi"},
+  {t:"Mujhe tumse pyaar hai", l:"Urdu"},
+  {t:"Mã timīlā'ī māyā garchu", l:"Nepalês"},
+  {t:"Waan ku jeclahay", l:"Somali"},
+  {t:"Tiako ianao", l:"Malgaxe"},
+  {t:"Aroha au ki a koe", l:"Maori"},
+  {t:"Ou te alofa ia te oe", l:"Samoano"},
+  {t:"Au domoni iko", l:"Fijiano"},
+  {t:"Te amo", l:"Esperanto"},
+  {t:"Nga yaw pya de", l:"Birmanês"},
+  {t:"Khnhom sralanh anak", l:"Khmer"},
+  {t:"Khony hak chao", l:"Lao"},
+  {t:"Anh yêu em / Em yêu anh", l:"Vietnamita"},
+  {t:"Aku cinta kamu", l:"Indonésio"},
+  {t:"Saya cinta padamu", l:"Malaio"},
+  {t:"Mahal kita", l:"Filipino/Tagalog"},
+  {t:"Wǒ ài nǐ", l:"Chinês (Mandarim)"},
+  {t:"Aishiteru", l:"Japonês"},
+  {t:"Saranghae", l:"Coreano"},
+  {t:"Men seni süyemin", l:"Cazaque"},
+  {t:"Men seni sevaman", l:"Uzbeque"},
+  {t:"Mən səni sevirəm", l:"Azeri"},
+  {t:"Seni seviyorum", l:"Turco"},
+  {t:"Man to rā dust dāram", l:"Persa"},
+  {t:"Te quiero", l:"Ladino"},
+  {t:"Tá grá agam duit", l:"Irlandês"},
+  {t:"Yr wyf i'n dy garu di", l:"Galês"},
+  {t:"Je t'aime", l:"Francês"},
+  {t:"T'estimo", l:"Catalão"},
+  {t:"Te quiero", l:"Espanhol"},
+  {t:"Te amo", l:"Português"},
+  {t:"Aš tave myliu", l:"Lituano"},
+  {t:"Es tevi mīlu", l:"Letão"},
+  {t:"Armastan sind", l:"Estoniano"},
+  {t:"Rakastan sinua", l:"Finlandês"},
+  {t:"Jag älskar dig", l:"Sueco"},
+  {t:"Jeg elsker deg", l:"Norueguês"},
+  {t:"Jeg elsker dig", l:"Dinamarquês"},
+  {t:"S’agapo", l:"Grego"},
+  {t:"Ti amo", l:"Albanês"},
+  {t:"Te dua", l:"Albanês"},
+  {t:"Volim te", l:"Sérvio"},
+  {t:"Ljubim te", l:"Esloveno"},
+  {t:"Miluji tě", l:"Tcheco"},
+  {t:"Ľúbim ťa", l:"Eslovaco"},
+  {t:"Kocham cię", l:"Polonês"},
+  {t:"Szeretlek", l:"Húngaro"},
+  {t:"Ya tebya lyublyu", l:"Russo"},
+  {t:"Ya tebe kokhayu", l:"Ucraniano"},
+  {t:"Te iubesc", l:"Romeno"}
+];
+
+// =========================
+//     Utilidades
+// =========================
+function getParams(){
+  const u = new URL(window.location);
+  return Object.fromEntries(u.searchParams.entries());
+}
+
+function daysBetweenUTC(a, b){
+  const ms = Date.UTC(b.getUTCFullYear(), b.getUTCMonth(), b.getUTCDate()) - Date.UTC(a.getUTCFullYear(), a.getUTCMonth(), a.getUTCDate());
+  return Math.floor(ms / (1000 * 60 * 60 * 24));
+}
+
+function updateContent(){
+  const { nome, start } = getParams();
+
+  // A data de início do contador.
+  const startDate = start ? new Date(start) : new Date("2025-08-17"); 
+  const today = new Date();
+  const dayIndex = daysBetweenUTC(startDate, today) % MESSAGES.length;
+
+  const phraseData = MESSAGES[dayIndex];
+  
+  // Atualiza os elementos da página
+  document.getElementById("phrase").textContent = phraseData.t;
+  document.getElementById("lang").textContent = phraseData.l;
+  document.getElementById("today").textContent = `Dia ${dayIndex + 1}`;
+
+  if (nome) {
+    document.getElementById("title").textContent = `${nome}, todo dia eu te amo.`;
+  }
+}
+
+// =========================
+//  Lógica de inicialização
+// =========================
+// Adiciona corações animados ao fundo
+function addHearts(){
+  const hearts = document.getElementById('hearts');
+  const count = 30; // Número de corações
+  const html = '<span>💖</span>'.repeat(count);
+  hearts.innerHTML = html;
+  
+  const spans = hearts.querySelectorAll('span');
+  spans.forEach((span, i) => {
+    const delay = (i / count) * 6; // Ajuste para espalhar a animação
+    const x = Math.random() * 90 + 5;
+    span.style.left = `${x}%`;
+    span.style.animationDelay = `${delay}s`;
+    span.style.animationDuration = `${6 + Math.random() * 4}s`;
+  });
+}
+
+// Botões de ação
+document.getElementById("copy").addEventListener("click", () => {
+  const phrase = document.getElementById("phrase").textContent;
+  navigator.clipboard.writeText(phrase);
+  alert("Frase copiada!");
+});
+
+document.getElementById("tts").addEventListener("click", () => {
+  const phraseData = MESSAGES[daysBetweenUTC(new Date("2025-08-17"), new Date()) % MESSAGES.length];
+  if ('speechSynthesis' in window) {
+    const utterance = new SpeechSynthesisUtterance(phraseData.t);
+    if (phraseData.v) {
+      utterance.lang = phraseData.v;
+    }
+    window.speechSynthesis.speak(utterance);
+  } else {
+    alert("Seu navegador não suporta a função de voz.");
+  }
+});
+
+document.getElementById("share").addEventListener("click", () => {
+  if (navigator.share) {
+    const phrase = document.getElementById("phrase").textContent;
+    navigator.share({
+      title: 'Uma mensagem para você',
+      text: phrase,
+    }).catch(console.error);
+  } else {
+    alert("Seu navegador não suporta o compartilhamento.");
+  }
+});
+
+// Inicialização da página
+document.addEventListener("DOMContentLoaded", () => {
+  updateContent();
+  addHearts();
+});
+</script>
+</body>
+</html>
